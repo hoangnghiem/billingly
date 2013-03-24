@@ -7,6 +7,7 @@ class CreateBillinglyTables < ActiveRecord::Migration
     end
     
     create_table :billingly_invoices do |t|
+      t.string 'code'
       t.references :customer, null: false
       t.references :subscription
       t.decimal 'amount', precision: 11, scale: 2, default: 0.0, null: false

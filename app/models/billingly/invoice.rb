@@ -4,6 +4,7 @@ module Billingly
     belongs_to :customer
     has_many :journal_entries 
     attr_accessible :customer, :amount, :due_on, :period_start, :period_end
+    before_create :generate_code
     
     def paid?
       not paid_on.nil?
@@ -82,6 +83,13 @@ module Billingly
       return if customer.do_not_email?
       Billingly::Mailer.paid_notification(self).deliver!
       update_attribute(:notified_paid_on, Time.now)
+    end
+
+    def generate_code
+      self.code = loop do
+        random_token = SecureRandom.urlsafe_base64
+        break random_token unless self.class.where(code: random_token).exists?
+      end
     end
   end
 end
