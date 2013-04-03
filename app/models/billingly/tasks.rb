@@ -51,7 +51,12 @@ class Billingly::Tasks
     end
     self.extended.write("#{text}\n\n")
   end
-  
+
+  def log_error(text)
+    self.extended ||= ''
+    self.extended += "#{text}\n"
+  end
+
   # Writes a line to the {#summary} section of this task results report.
   # @param text [String]
   def log_summary(text)
@@ -80,7 +85,7 @@ class Billingly::Tasks
       collection_getter.call
     rescue Exception => e
       failure += 1
-      log_extended("#{task_name}:\nCollection getter failed\n#{e.message}\n\n#{e.backtrace}")
+      log_error("#{task_name}:\nCollection getter failed\n#{e.message}\n\n#{e.backtrace}")
       return
     end
 
@@ -92,7 +97,7 @@ class Billingly::Tasks
         success += 1 if item.send(method)
       rescue Exception => e
         failure += 1
-        log_extended("#{task_name}:\n#{e.message}\n#{item.inspect}\n\n#{e.backtrace}")
+        log_error("#{task_name}:\n#{e.message}\n#{item.inspect}\n\n#{e.backtrace}")
       end
     end
 
