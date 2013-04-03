@@ -38,7 +38,7 @@ class Billingly::Tasks
     notify_all_will_trial_expire
 
     self.ended = Time.now
-    self.extended.close unless self.extended.nil?
+    # self.extended.close unless self.extended.nil?
     Billingly::Mailer.task_results(self).deliver
   end
   
