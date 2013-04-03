@@ -1,5 +1,5 @@
 class Billingly::BaseMailer < ActionMailer::Base
-  default from: 'example@example.com'
+  # default from: 'example@example.com'
   
   cattr_accessor :admin_emails
   self.admin_emails = 'admin@example.com'
@@ -31,5 +31,12 @@ class Billingly::BaseMailer < ActionMailer::Base
   def trial_expired_notification(subscription)
     @subscription = subscription
     mail to: subscription.customer.email, subject: I18n.t('billingly.your_trial_has_expired')
+  end
+
+  # Sends the email about an expired trial.
+  # param trial [Subscription] a trial which should be expired.
+  def trial_will_expire_notification(subscription)
+    @subscription = subscription
+    mail to: subscription.customer.email, subject: I18n.t('billingly.your_trial_will_expire', day: Billingly.trial_before_days)
   end
 end

@@ -60,11 +60,14 @@ module Billingly
     # The grace period we use when calculating an invoices due date.
     # If a subscription is payable_upfront, then the customer effectively owes us
     # since the day in which a given period starts.
+    # 
     # If a subscription is payable on 'due-month', then the customer effectively
     # owes us money since the date in which a given period ended.
+    #
     # When we invoice for a given period we will set the due_date a few days
     # ahead of the date in which the debt was made effective, we call this
     # a grace_period.
+    #
     # @property grace_period
     # @return [ActiveSupport::Duration] It's what you get by doing '1.month', '10.days', etc.
     has_duration :grace_period
@@ -154,6 +157,7 @@ module Billingly
       self.unsubscribed_because = reason
       invoices.last.truncate unless trial?
       save!
+      on_terminated
       return self
     end
 
@@ -173,6 +177,23 @@ module Billingly
       Billingly::Mailer.trial_expired_notification(self).deliver!
       update_attribute(:notified_trial_expired_on, Time.now)
       return self
+    end
+
+    # When a trial subscription about to end, the customer is notified about it via email.
+    # @return [self, nil] not nil means the notification was sent successfully.
+    def notify_trial_will_expire
+      return unless trial?
+      # return unless terminated? && unsubscribed_because == 'trial_expired'
+      return unless notified_trial_will_expire_on.nil?
+      return if customer.do_not_email?
+      Billingly::Mailer.trial_will_expire_notification(self).deliver!
+      update_attribute(:notified_trial_will_expire_on, Time.now)
+      return self
+    end
+
+    # provide your own callback
+    def on_terminated
+      
     end
   end
 end

@@ -5,6 +5,9 @@ module Billingly
   mattr_accessor :parent_controller
   @@parent_controller = "ApplicationController"
 
+  mattr_accessor :trial_before_days
+  @@trial_before_days = 7
+
   def self.setup
     yield self
   end

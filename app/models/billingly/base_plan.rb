@@ -12,5 +12,6 @@ module Billingly
 
     has_duration :periodicity
     validates :periodicity, presence: true
+    
   end
 end

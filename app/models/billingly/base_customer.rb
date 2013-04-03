@@ -115,23 +115,32 @@ module Billingly
     # @param [Plan, Subscription] 
     # @return [Subscription] The newly created {Subscription}
     def subscribe_to_plan(plan, is_trial_expiring_on = nil) 
-      subscriptions.last.terminate_changed_subscription if subscriptions.last
-
-      subscription = subscriptions.build.tap do |new|
-        [:payable_upfront, :description, :periodicity,
-         :amount, :grace_period, :signup_price].each do |k|
-          new[k] = plan[k]
+      subscription = nil
+      begin
+        transaction do
+          subscriptions.last.terminate_changed_subscription if subscriptions.last
+          subscription = subscriptions.build.tap do |new|
+            [:payable_upfront, :description, :periodicity,
+             :amount, :grace_period, :signup_price].each do |k|
+              new[k] = plan[k]
+            end
+            new.plan = plan if plan.is_a?(Billingly::Plan)
+            new.is_trial_expiring_on = is_trial_expiring_on
+            new.subscribed_on = Time.now
+            new.save!
+            new.generate_next_invoice  
+            on_subscription_success
+          end
+          self.deactivated_since = nil
+          self.deactivation_reason = nil
+          self.save!
         end
-        new.plan = plan if plan.is_a?(Billingly::Plan)
-        new.is_trial_expiring_on = is_trial_expiring_on
-        new.subscribed_on = Time.now
-        new.save!
-        new.generate_next_invoice  
-        on_subscription_success
+      rescue Exception => e
+        Rails.logger.info e
+        Rails.logger.info e.message
+        Rails.logger.info e.backtrace
+        raise e
       end
-      self.deactivated_since = nil
-      self.deactivation_reason = nil
-      self.save!
       return subscription
     end
     
@@ -271,7 +280,10 @@ module Billingly
       return if new_plan.nil?
       return unless deactivated?
       return if debtor?
-      update_attribute(:deactivated_since, nil)
+      self.deactivated_since = nil
+      self.deactivation_reason = nil
+      self.save!(validate: false)
+      # update_attribute(:deactivated_since, nil)
       subscribe_to_plan(new_plan)
       return self
     end
@@ -314,5 +326,6 @@ module Billingly
     def do_not_email?
       false
     end
+    
   end
 end

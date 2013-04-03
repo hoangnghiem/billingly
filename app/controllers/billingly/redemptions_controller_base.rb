@@ -1,6 +1,6 @@
 # People who have a {Billingly::SpecialPlanCode SpecialPlanCode} can redeem it through
 # the {Billingly::RedemptionsController}
-class Billingly::RedemptionsControllerBase < BillinglyController
+class Billingly::RedemptionsControllerBase < Billingly::BaseController
   def new
   end
   

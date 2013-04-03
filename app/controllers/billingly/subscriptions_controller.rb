@@ -1,5 +1,5 @@
 # This controller takes care of managing subscriptions.
-class Billingly::SubscriptionsController < BillinglyController
+class Billingly::SubscriptionsController < Billingly::BaseController
   before_filter :requires_customer
   before_filter :requires_active_customer, except: [:index, :reactivate, :invoice]
 

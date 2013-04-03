@@ -28,5 +28,6 @@ en:
     your_trial_has_expired: Your trial period has expired
     your_trial_has_expired_please_choose_a_plan:
       "Your trial period has ended on %{end_date} please choose a plan and sign up again."
+    your_trial_will_expire: "Your trial expires in %{day}"
     please_visit: Please visit
     

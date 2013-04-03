@@ -1,4 +1,4 @@
-class BillinglyController < Billingly.parent_controller.constantize
+class Billingly::BaseController < Billingly.parent_controller.constantize
 
   def current_customer
     nil

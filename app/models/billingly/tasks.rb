@@ -34,6 +34,8 @@ class Billingly::Tasks
     notify_all_paid
     notify_all_pending
     notify_all_overdue
+    notify_all_trial_expired
+    notify_all_will_trial_expire
 
     self.ended = Time.now
     self.extended.close unless self.extended.nil?
@@ -160,11 +162,33 @@ class Billingly::Tasks
   # See {Billingly::Invoice#notify_overdue Invoice#notify_overdue} for more info
   # on how overdue invoices are notified.
   def notify_all_overdue
-    batch_runner('Notifying Pending Invoices', :notify_overdue) do
+    batch_runner('Notifying Overdue Invoices', :notify_overdue) do
       Billingly::Invoice
         .where('due_on <= ?', Time.now)
         .where(deleted_on: nil, paid_on: nil, notified_overdue_on: nil)
         .readonly(false)
+    end
+  end
+
+  # Customers are notified about their trial is expired by this task.
+  # See {Billingly::Subscription#notify_trial_expired Subscription#notify_trial_expired} for more info
+  # on how trial expired are notified.
+  def notify_all_trial_expired
+    batch_runner('Notifying Trial Expired', :notify_trial_expired) do
+      Billingly::Subscription.joins(:customer).readonly(false)
+        .where("#{Billingly::Customer.table_name}.deactivation_reason = ?", 'trial_expired')
+    end
+  end
+
+  # Customers are notified about their trial is about to expire by this task.
+  # See {Billingly::Customer#notify_trial_will_expire Customer#notify_trial_will_expire} for more info
+  # on how will trial expire are notified.
+  def notify_all_will_trial_expire
+    batch_runner('Notifying Trial Will Expire', :notify_trial_will_expire) do
+      Billingly::Subscription.joins(:customer).readonly(false)
+        .where("#{Billingly::Customer.table_name}.deactivated_since IS NULL")
+        .where("#{Billingly::Subscription.table_name}.is_trial_expiring_on IS NOT NULL")
+        .where("DATE(#{Billingly::Subscription.table_name}.is_trial_expiring_on) = ?", Date.today + Billingly.trial_before_days)
     end
   end
 
@@ -197,4 +221,5 @@ class Billingly::Tasks
         .where(billingly_subscriptions: {unsubscribed_on: nil})
     end
   end
+
 end
