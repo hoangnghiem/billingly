@@ -115,7 +115,7 @@ module Billingly
     # @param [Plan, Subscription]
     # @return [Subscription] The newly created {Subscription}
     def subscribe_to_plan(plan, is_trial_expiring_on = nil)
-      before_subscribe_to_plan(plan)
+      before_subscribe_to_plan(plan, is_trial_expiring_on)
       subscription = nil
       begin
         transaction do
@@ -163,7 +163,7 @@ module Billingly
     def on_subscription_success
     end
 
-    def before_subscribe_to_plan(plan)
+    def before_subscribe_to_plan(plan, is_trial_expiring_on)
     end
 
     # Creates a general ledger from {JournalEntry journal entries}.
